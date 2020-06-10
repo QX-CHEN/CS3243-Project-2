@@ -188,8 +188,8 @@ class CSP(object):
     def regenerateCurrDomains(self):
         ''' Create a copy of domains as currDomains '''
         # self.currDomains = dict()
-        if not self.currDomains:
-            for var in self.domains:
+        if self.currDomains is None:
+            for var in self.variables:
                 self.currDomains[var] = {i for i in self.domains[var]}
         return
 
