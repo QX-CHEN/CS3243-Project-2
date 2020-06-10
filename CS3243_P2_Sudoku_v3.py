@@ -35,6 +35,7 @@ class CSP():
         self.cols = dict()
         self.squares = dict()
         self.initialiseCSP(puzzle)
+        self.currDomain = dict()
     
     def initialiseCSP(self, puzzle):
         # going through 2d list
@@ -61,14 +62,39 @@ class CSP():
 
     def assign(self):
         return
-    
+
     def constraintsPropagation(self):
         return
 
-    def search(self):
-        return
-    
+    def backtrackSearch(self, domains):
+        if domains is False:
+            return False
+        if self.checkSolved(domains):
+            return domains
+        var = self.mrv(domains)
+        # return self.anyPossibleSequence(self.backtrackSearch( \
+        #     self.assign(domains.copy(),var, d)) for d in domains[var])
+        for d in domains[var]:
+            result = self.backtrackSearch(self.assign(domains.copy(),var, d))
+            if result:
+                return result
+        return False
 
+    def checkSolved(self,domains):
+        for var in self.variables:
+            if len(domains[var]) != 1:
+                return False
+        return True
+    def mrv(self, domains):
+        # Minmum remaining values heuristic domains = {a: 1, b 123, c 12345} b
+        #return min((var) for var in self.variables if len(domains[var])>1, key = len(domains[var]))
+        return min(self.variables,key=lambda var: len(domains[var]) if (len(domains[var]) > 1) else 99)
+    def anyPossibleSequence(self, sequence):
+        # Returns the element if it is not false
+        for elem in sequence:
+            if elem:
+                return elem
+        return False
 
 class Variable(object):
     def __init__(self, coordinate, value):
