@@ -5,7 +5,7 @@ import sys
 import copy
 from random import shuffle
 from time import time
-from sortedcontainers import SortedSet
+#from sortedcontainers import SortedSet
 # from collections import defaultdict, Counter
 # Running script: given code can be run with the command:
 # python file.py, ./path/to/init_state.txt ./output/output.txt
@@ -39,13 +39,19 @@ class Sudoku(object):
     def solve(self):
 
         # self.ans is a list of lists
+        #print("BEFORE")
+        #self.printKeyVal(self.csp.domains)
         self.AC3(self.csp)
+        #print("AFTER")
+        #self.printKeyVal(self.csp.curr_domains)
         assignment = self.backtracking_search(self.csp)
         for var in assignment:
             (i, j) = var.coordinate
             self.ans[i][j] = assignment[var]
         return self.ans
-
+    def printKeyVal(self, cspAttr):
+        for key, value in cspAttr.items():
+            print(key, value)
     # def dom_j_up(self, csp, queue):
     #     return SortedSet(queue, key=lambda t: -(len(csp.curr_domains[t[1]])))
 
@@ -296,18 +302,19 @@ class Sudoku(object):
         return self.AC3(csp, {(X, var) for X in csp.neighbors[var]}, removals)
 
     # The search, proper
-
+    def complete(self, assignment,csp):
+        return len(assignment) == len(csp.variables)
     def backtracking_search(self, csp):
         """[Figure 6.5]"""
         assignment = csp.infer_assignment()
         def backtrack(assignment):
             # self.printAssignment(assignment)
             # print(len(assignment), len(csp.variables))
-            if len(assignment) == len(csp.variables):
+            if self.complete(assignment,csp):
                 return assignment
             var = self.mrv(assignment, csp)
             for value in self.lcv(var, assignment, csp):
-                if 0 == csp.nconflicts(var, value, assignment):
+                if 0 == csp.nconflicts(var, value, assignment): #if consistent
                     csp.assign(var, value, assignment)
                     removals = csp.suppose(var, value)
                     if self.forward_checking(csp, var, value, assignment, removals):
