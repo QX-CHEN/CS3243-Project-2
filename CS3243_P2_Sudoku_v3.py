@@ -19,6 +19,10 @@ class Sudoku(object):
 
     def solve(self):
         # self.ans is a list of lists
+        assignment = self.csp.backtrackSearch(self.csp.domains)
+        for var in assignment:
+            (i, j) = var.coordinate
+            self.ans[i][j] = assignment[var]
         return self.ans
 
     # you may add more classes/functions if you think is useful
@@ -44,7 +48,7 @@ class CSP():
                 self.variables.add(Variable((i, j), puzzle[i][j]))
         # going through var set
         for var1 in self.variables:
-            self.domains[var1] = "123456789" if not var1.value else str(value)
+            self.domains[var1] = "123456789" if not var1.value else str(var1.value)
             self.rows[var1] = []
             self.cols[var1] = []
             self.squares[var1] = []
@@ -60,11 +64,41 @@ class CSP():
                     if var1.isSameUnit(var2):
                         self.neighbors[var1].append(var2)
 
-    def assign(self):
-        return
+    def assign(self, currDomain, var, val):
+        temp = currDomain[var].replace(val, "")
+        for delVal in temp:
+            if not self.constraintsPropagation(currDomain, var, delVal):
+                return False
+        return currDomain
+    
+    def constraintsPropagation(self, currDomain, var, delVal):
+        # check exists
+        if delVal not in currDomain[var]:
+            return currDomain
 
-    def constraintsPropagation(self):
-        return
+        # delete delVal from currDomain
+        currDomain[var] = currDomain[var].replace(delVal, "")
+
+        # when var can only take on a val, assign it
+        if not len(currDomain[var]):
+            return False
+        elif len(currDomain[var]) == 1:
+            for neighbor in self.neighbors[var]:
+                if not self.constraintsPropagation(currDomain, neighbor, currDomain[var][0]):
+                    return False
+
+        # when only one var left in a unit for a val, assign it
+        def varsAvailable(seq):
+            lst = list(filter(lambda v: delVal in currDomain[v], seq))
+            if not len(lst):
+                return False
+            elif len(lst) == 1:
+                if not self.assign(currDomain, lst[0], delVal):
+                    return False
+        varsAvailable(self.rows)
+        varsAvailable(self.cols)
+        varsAvailable(self.squares)
+        return currDomain
 
     def backtrackSearch(self, domains):
         if domains is False:
