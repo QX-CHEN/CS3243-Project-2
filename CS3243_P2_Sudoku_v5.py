@@ -18,6 +18,7 @@ class Sudoku(object):
 
     def solve(self):
         self.AC3(self.csp)
+
         assignment = self.backtrackingSearch(self.csp)
         for var in assignment:
             (i, j) = var.coordinate
@@ -89,11 +90,9 @@ class Sudoku(object):
     
     def isConsistent(self,var, val, assignment, csp):
         for key in assignment:
-            try:
-                if csp.constraints[(var,key)](val,assignment[var]):
+            if csp.constraints.has_key((var,key)):
+                if csp.constraints[(var,key)](val,assignment[key]):
                     return False
-            except:
-                continue
         return True
     
     def mrv(self,csp,assignment): # minimum remaining values
@@ -140,20 +139,31 @@ class Sudoku(object):
                         arc_q.append((xk, xi))
         return True
     def revise(self, csp, xi, xj):
-        revised = False
-        for x in csp.currDomains[xi].copy():
-            conflict = True
-            #if any(map(lambda y : csp.constraints[(xi, xj)](x, y),csp.currDomains[xj])):
-                #xi.domain.remove(x)
-            for y in csp.currDomains[xj]:
-                if not csp.constraints[(xi,xj)](x,y):
-                    conflict = False
-                if not conflict:
-                    break
-            if conflict:
-                csp.currDomains[xi].remove(x)
-                revised = True
-        return revised
+        length = len(csp.currDomains[xi])
+        if len(csp.currDomains[xj]) == 1:
+            csp.currDomains[xi]-=csp.currDomains[xj]
+            if len(csp.currDomains[xi])< length:
+                return True
+        return False
+        # revised = False
+        # print("before xi:",csp.currDomains[xi])
+        # print("before xj:",csp.currDomains[xj])
+        # for x in csp.currDomains[xi].copy():
+        #     conflict = True
+        #     #if any(map(lambda y : csp.constraints[(xi, xj)](x, y),csp.currDomains[xj])):
+        #         #xi.domain.remove(x)
+        #     for y in csp.currDomains[xj]:
+        #         if not csp.constraints[(xi,xj)](x,y):
+        #             conflict = False
+        #         if not conflict:
+        #             break
+        #     if conflict:
+        #         csp.currDomains[xi].remove(x)
+        #         revised = True
+        # if revised:        
+        #     print("after",csp.currDomains[xi])
+        #     print("------------------------")
+        # return revised
 
     # you may add more classes/functions if you think is useful
     # However, ensure all the classes/functions are in this file ONLY
@@ -223,7 +233,8 @@ class CSP(object):
         return
     def inferAssignment(self):
         assignment = {}
-        print("infer assignment")
+        #print("infer assignment")
+        #self.copyCurrDomain()
         for var in self.currDomains:
             if len(self.currDomains[var])==1:
                 assignment[var] = list(self.currDomains[var])[0]
