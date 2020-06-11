@@ -5,7 +5,7 @@ import sys
 import copy
 from random import shuffle
 from time import time
-from sortedcontainers import SortedSet
+#from sortedcontainers import SortedSet
 # from collections import defaultdict, Counter
 # Running script: given code can be run with the command:
 # python file.py, ./path/to/init_state.txt ./output/output.txt
@@ -38,8 +38,10 @@ class CSP():
         self.rows = dict()
         self.cols = dict()
         self.squares = dict()
+        self.units = dict()
         self.initialiseCSP(puzzle)
         self.currDomain = dict()
+        
     
     def initialiseCSP(self, puzzle):
         # going through 2d list
@@ -53,6 +55,10 @@ class CSP():
             self.cols[var1] = []
             self.squares[var1] = []
             self.neighbors[var1] = []
+            self.units[var1] = []
+            self.units[var1].append([var1])
+            self.units[var1].append([var1])
+            self.units[var1].append([var1])
             for var2 in self.variables:
                 if var1 != var2:
                     if var1.isSameRow(var2):
@@ -63,7 +69,9 @@ class CSP():
                         self.squares[var1].append(var2)
                     if var1.isSameUnit(var2):
                         self.neighbors[var1].append(var2)
-
+            self.units[var1][0]+=self.cols[var1]
+            self.units[var1][1]+=self.rows[var1]
+            self.units[var1][2]+=self.squares[var1]
     def assign(self, currDomain, var, val):
         temp = currDomain[var].replace(val, "")
         for delVal in temp:
@@ -83,21 +91,30 @@ class CSP():
         if not len(currDomain[var]):
             return False
         elif len(currDomain[var]) == 1:
+            delVal2 = currDomain[var] # edited by Hussain
             for neighbor in self.neighbors[var]:
-                if not self.constraintsPropagation(currDomain, neighbor, currDomain[var][0]):
+                
+                if not self.constraintsPropagation(currDomain, neighbor, delVal2):
                     return False
 
         # when only one var left in a unit for a val, assign it
-        def varsAvailable(seq):
-            lst = list(filter(lambda v: delVal in currDomain[v], seq))
-            if not len(lst):
+        # def varsAvailable(seq):
+        #     lst = list(filter(lambda v: delVal in currDomain[v], seq))
+        #     if not len(lst):
+        #         return False
+        #     elif len(lst) == 1:
+        #         if not self.assign(currDomain, lst[0], delVal):
+        #             return False
+        # varsAvailable(self.rows)
+        # varsAvailable(self.cols)
+        # varsAvailable(self.squares)
+        for u in self.units[var]:
+            dplaces = [var for var in u if delVal in currDomain[var]]
+            if len(dplaces) == 0:
                 return False
-            elif len(lst) == 1:
-                if not self.assign(currDomain, lst[0], delVal):
+            elif len(dplaces) == 1:
+                if not self.assign(currDomain, dplaces[0], delVal):
                     return False
-        varsAvailable(self.rows)
-        varsAvailable(self.cols)
-        varsAvailable(self.squares)
         return currDomain
 
     def backtrackSearch(self, domains):
